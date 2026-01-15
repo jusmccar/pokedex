@@ -55,6 +55,29 @@ export class PokeAPI {
 			);
 		}
 	}
+
+	async fetchPokemon(pokemonName: string): Promise<Pokemon> {
+		const url = `${PokeAPI.baseURL}/pokemon/${pokemonName}`;
+		const cached = this.cache.get<Pokemon>(url);
+
+		if (cached) {
+			return cached;
+		}
+
+		try {
+			const resp = await fetch(url);
+
+			if (!resp.ok) {
+				throw new Error(`${resp.status} ${resp.statusText}`);
+			}
+
+			const pokemon: Pokemon = await resp.json();
+			this.cache.add(url, pokemon);
+			return pokemon;
+		} catch (e) {
+			throw new Error(`Error fetching Pokémon '${pokemonName}': ${(e as Error).message}`);
+		}
+	}
 }
 
 export type ShallowLocations = {
@@ -118,4 +141,12 @@ export type Location = {
 			};
 		}[];
 	}[];
+};
+
+export type Pokemon = {
+	id: number;
+	name: string;
+	base_experience: number;
+	types: { slot: number; type: { name: string; url: string } }[];
+	sprites: { front_default: string };
 };
